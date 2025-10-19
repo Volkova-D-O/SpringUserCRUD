@@ -2,11 +2,12 @@ package ru.wteam.SpringUserCRUD.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.wteam.SpringUserCRUD.dto.UserDto;
 import ru.wteam.SpringUserCRUD.entity.User;
+import ru.wteam.SpringUserCRUD.kafka.producer.KafkaProducerCreateUser;
+import ru.wteam.SpringUserCRUD.kafka.producer.KafkaProducerDeleteUser;
 import ru.wteam.SpringUserCRUD.mapper.UserMapper;
 import ru.wteam.SpringUserCRUD.repository.UserRepository;
 
@@ -20,12 +21,15 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
     private final UserMapper mapper;
+    private final KafkaProducerCreateUser kafkaProducerCreateUser;
+    private final KafkaProducerDeleteUser kafkaProducerDeleteUser;
 
 
     @Override
     public Long createUser(UserDto dto) {
         User entity = mapper.toEntity(dto);
         repository.save(entity);
+        kafkaProducerCreateUser.sendMessage(entity.getEmail());
         log.info("User saved [id={}]", entity.getId());
         return entity.getId();
     }
@@ -63,7 +67,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
+        String email = repository.findById(id)
+                .map(User::getEmail)
+                .orElseThrow(() -> new RuntimeException("пользователя не существует"));
         repository.deleteById(id);
+        kafkaProducerDeleteUser.sendMessage(email);
         log.info("User deleted [id={}]", id);
     }
 }
