@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: dockerfile-main-service
+        ports:
+        - "8080:8080"
+        environment:
+            SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/dbhw2
+            spring_datasource_username: "postgres"
+            spring_datasource_password: "1995"
+            SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+        depends_on:
+        - postgres-db
+        networks: 
+          - default
+          - my_shared_kafka_network 
+        
+    postgres-db:
+        image: postgres:latest
+        container_name: postgres-db-container
+        ports:
+          - "5432:5432"
+        environment:
+          POSTGRES_DB: dbhw2
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "1995"
+        healthcheck:
+              test: ["CMD-SHELL", "pg_isready -U postgres -d dbhw2"]
+              interval: 10s
+              timeout: 5s
+              retries: 5
+              start_period: 5s
+
+networks:
+    my_shared_kafka_network:
+        name: "kafka-folder_default"
+        external: true
