@@ -10,7 +10,7 @@ services:
         environment:
             SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/dbhw2
             spring_datasource_username: "postgres"
-            spring_datasource_password: "1995"
+            spring_datasource_password: "postgres"
             SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
         depends_on:
         - postgres-db
@@ -26,7 +26,7 @@ services:
         environment:
           POSTGRES_DB: dbhw2
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: "1995"
+          POSTGRES_PASSWORD: "postgres"
         healthcheck:
               test: ["CMD-SHELL", "pg_isready -U postgres -d dbhw2"]
               interval: 10s
